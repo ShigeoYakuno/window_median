@@ -5,8 +5,8 @@ module tb_median_filter;
     // Parameters
     localparam int DATA_WIDTH = 16;
     localparam real CLK_PERIOD = 10.0; // 100MHz
-    localparam real SAMPLE_PERIOD = 100.0; // For simulation acceleration
-    localparam int DEPTH = 11;
+    localparam real SAMPLE_PERIOD = 300.0; // For simulation acceleration
+    localparam int DEPTH = 15;
     localparam int MEDIAN_INDEX = DEPTH / 2;
 
     // Signals
@@ -53,13 +53,13 @@ module tb_median_filter;
 
     // Initialization and stimulus
     initial begin
-        input_file = $fopen("D:/vivado/simuration/median_window/input.txt", "r");
+        input_file = $fopen("C:/users/yakun/screen/sim/window_median/input.txt", "r");
         if (input_file == 0) begin
             $display("ERROR: Failed to open input.txt.");
             $finish;
         end
 
-        output_file = $fopen("D:/vivado/simuration/median_window/output_w.txt", "w");
+        output_file = $fopen("C:/users/yakun/screen/sim/window_median/output_w.txt", "w");
         if (output_file == 0) begin
             $display("ERROR: Failed to create output.txt.");
             $finish;
@@ -83,7 +83,6 @@ module tb_median_filter;
                 @(posedge ck100m);
                 in <= read_data;
                 enable <= 1;
-                log_enable <= (sample_index < 8); // Log only first 8 samples
                 sample_index++;
             end
             @(posedge ck100m);
@@ -95,25 +94,6 @@ module tb_median_filter;
         $fclose(output_file);
         $display("Simulation finished");
         $finish;
-    end
-
-    // Logging block
-    always @(posedge ck100m) begin
-        if (srst_n && log_enable) begin
-            in_snapshot <= in;
-            sample_snapshot <= sample_index;
-            for (int i = 0; i < DEPTH; i++) begin
-                window_snapshot[i] <= dut.window[i];
-            end
-            median_snapshot <= dut.sort_array[MEDIAN_INDEX];
-
-            $display("Sample %0d: in = %0d", sample_snapshot, in_snapshot);
-            for (int i = 0; i < DEPTH; i++) begin
-                $display("  window[%0d] = %0d", i, window_snapshot[i]);
-            end
-            $display("  [INFO] median(sort_array[%0d]) = %0d", MEDIAN_INDEX, median_snapshot);
-            log_enable <= 0; // Disable logging until next sample
-        end
     end
 
     // Output logging
